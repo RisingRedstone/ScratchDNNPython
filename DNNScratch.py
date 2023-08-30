@@ -122,8 +122,6 @@ if __name__ == "__main__":
         A.TrainEpoch(train_X, trainH_Y.transpose())
         tester = A.Test(test_X, testH_Y.transpose())
         print("LOSS: {0}\tACCURACY: {1}%".format(tester[1], tester[0]*100))
-    
-    A.ForwardProp(train_X.transpose()[0].transpose())
         
     
     
