@@ -14,6 +14,16 @@ def ActivationFunctions(name):
         return lambda x: np.maximum(0, x)
     if(name == 'Sigmoid'):
         return lambda x: 1/(1+np.exp(-x))
+    if(name == 'Softmax'):
+        def SoftMax(x):
+            temp0 = np.exp(709)
+            temp1 = np.exp(710)
+            temp2 = np.exp(-714)
+            Exp = np.exp(x)
+            Exp[Exp == temp1] = temp0
+            Exp[Exp == 0] = temp2
+            return Exp / np.sum(Exp, axis = 0)
+        return lambda x: SoftMax(x)
     print("Activatio Function Not recognised")
     assert False
 
@@ -21,6 +31,8 @@ def ActivationFunctionDerivative(name):
     if(name=='ReLu'):
         return lambda x: 1-(x==0)
     if(name=='Sigmoid'):
+        return lambda x: x*(1-x)
+    if(name=='Softmax'):
         return lambda x: x*(1-x)
     return lambda x: np.ones(np.shape(x))
 
@@ -45,7 +57,10 @@ class NeuralNet:
         
         self.M = []
         for i in range(len(Layers)-1):
-            self.M.append(2 * (np.random.random((Layers[i+1], Layers[i])) - 0.5))
+            # Using random Weights initialization method
+            #self.M.append(2 * (np.random.random((Layers[i+1], Layers[i])) - 0.5))
+            # Using He Weights initialization method
+            self.M.append(np.random.normal(loc = 0, scale = ((2/Layers[i]) ** (1/2)), size = (Layers[i+1], Layers[i])))
     
     def ForwardProp(self, Inputs):
         if(np.shape(Inputs)[0] != np.shape(self.M[0])[1]):
@@ -96,16 +111,12 @@ class NeuralNet:
             self.Train(Inputs[i].transpose(), Test[i].transpose())
         
         
-        
-        
-        
-        
 
-LEARNING_RATE = 10e-4
-EPOCH_SIZE = 2000
+LEARNING_RATE = 25e-4
+EPOCH_SIZE = 2000   
 
 if __name__ == "__main__":
-    A = NeuralNet((28*28, 128, 32, 16, 10), ('Sigmoid', 'Sigmoid', 'Sigmoid', 'Sigmoid'), 'MSE', LEARNING_RATE, EPOCH_SIZE)
+    A = NeuralNet((28*28, 128, 32, 10), ('ReLu', 'ReLu', 'Softmax'), 'MSE', LEARNING_RATE, EPOCH_SIZE)
     (train_X, train_y), (test_X, test_y) = mnist.load_data()
     train_X = np.reshape(train_X, (len(train_X), 28*28)).transpose().astype('float64')
     test_X = np.reshape(test_X, (len(test_X), 28*28)).transpose().astype('float64')
@@ -118,10 +129,12 @@ if __name__ == "__main__":
     train_X /= 255.0
     test_X /= 255.0
     
-    for i in range(200):
+    for i in range(50):
         A.TrainEpoch(train_X, trainH_Y.transpose())
         tester = A.Test(test_X, testH_Y.transpose())
         print("LOSS: {0}\tACCURACY: {1}%".format(tester[1], tester[0]*100))
+    
+    Ans = A.ForwardProp(train_X.transpose()[0:100].transpose())[-1].transpose()
         
     
     
